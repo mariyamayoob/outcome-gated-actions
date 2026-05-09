@@ -1,3 +1,15 @@
 """Outcome-gated action experiment package."""
 
-__all__ = []
+from outcome_gated_actions.agent import DeterministicFakeProvider, get_provider_from_env
+from outcome_gated_actions.judge import RubricJudge
+from outcome_gated_actions.schemas import ALLOWED_ACTIONS, AgentDecision, JudgeResult, SupportCase
+
+__all__ = [
+    "ALLOWED_ACTIONS",
+    "AgentDecision",
+    "DeterministicFakeProvider",
+    "JudgeResult",
+    "RubricJudge",
+    "SupportCase",
+    "get_provider_from_env",
+]
