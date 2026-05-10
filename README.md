@@ -115,6 +115,14 @@ If wrong actions fall but false rejections and extra calls rise sharply, the gat
 
 The cases are synthetic and small. The judge checks the final action, not the full customer-facing response. The rubric is handcrafted, so it represents known policy constraints rather than discovered edge cases. Live model results can vary across models, prompts, and repeated runs.
 
-## DSC Article Angle
-
 Rubric-gated retries can help when the agent outcome is a closed, objective decision. They are less reliable when the desired improvement is subjective quality.
+
+## Example run
+
+Model: gpt-4.1-mini
+Cases: 30
+Baseline wrong actions: 6 / 30
+Gated wrong actions: 2 / 30
+Wrong-action rate reduced from 20.00% to 6.67%
+Retry rate: 20.00%
+False rejections: 0 in this run
