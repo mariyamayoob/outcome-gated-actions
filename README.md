@@ -4,7 +4,12 @@ This repo contains one narrow experiment for a DSC article:
 
 Can a rubric-gated retry loop reduce wrong final actions when a support decision agent must choose from a closed set?
 
-The experiment uses OpenAI Responses API structured outputs for the support decision agent. A separate deterministic rubric judge checks the selected action against objective policy constraints. If the judge fails the first answer, the agent receives the failed criteria and gets one retry.
+The experiment uses OpenAI Responses API structured outputs for the support decision agent. A separate rubric judge checks the selected action against objective policy constraints. If the judge fails the first answer, the agent receives the failed criteria and gets one retry.
+
+This repo intentionally requires a real LLM provider at runtime. There is no fake provider because the experiment is about actual model behavior in two loops:
+
+- baseline decision
+- rubric-gated decision with one retry
 
 ## What It Tests
 
@@ -32,7 +37,7 @@ case -> OpenAI agent -> rubric judge -> one retry if failed -> final action
 
 ## Scope
 
-This repo is a narrow action-selection experiment. It leaves out brand voice, empathy, long-form answer quality, user satisfaction, general support performance, model-provider comparison, and prompt-strategy comparison.
+This repo is a narrow action-selection experiment. It is a support repo for an article, not a benchmark. It leaves out brand voice, empathy, long-form answer quality, user satisfaction, general support performance, model-provider comparison, and prompt-strategy comparison.
 
 The experiment focuses on outcomes that are objective, structured, and checkable.
 
@@ -51,6 +56,7 @@ pip install -r requirements.txt
 Set the OpenAI environment variables:
 
 ```bash
+set OUTCOME_GATED_PROVIDER=openai
 set OPENAI_API_KEY=your-api-key
 set OUTCOME_GATED_MODEL=your-model
 ```
@@ -74,21 +80,24 @@ The scripts write:
 - `outputs/summary.csv`
 - `outputs/failure_examples.md`
 
-## Illustrative Output Table
+## Output Table
 
-The table below shows the intended report shape. Actual values depend on the model, run date, and prompts.
+The table below shows the report shape. Values depend on the model, prompt, and run.
 
 | metric | value |
 | --- | ---: |
-| baseline_wrong_actions | 9 |
-| baseline_wrong_action_rate | 0.3000 |
-| gated_wrong_actions | 4 |
-| gated_wrong_action_rate | 0.1333 |
-| fixed_after_retry | 5 |
-| false_rejections | 1 |
-| false_rejection_rate | 0.0476 |
-| retry_rate | 0.3333 |
-| average_calls_per_case | 1.3333 |
+| metadata_baseline_provider | openai |
+| metadata_baseline_model | your-model |
+| metadata_gated_provider | openai |
+| metadata_gated_model | your-model |
+| baseline_wrong_actions | varies |
+| baseline_wrong_action_rate | varies |
+| gated_wrong_actions | varies |
+| gated_wrong_action_rate | varies |
+| fixed_after_retry | varies |
+| false_rejections | varies |
+| retry_rate | varies |
+| average_calls_per_case | varies |
 
 ## Interpret Results
 
@@ -104,7 +113,7 @@ If wrong actions fall but false rejections and extra calls rise sharply, the gat
 
 ## Limitations
 
-The cases are synthetic and small. The judge checks the final action, not the full customer-facing response. The rubric is handcrafted, so it represents known policy constraints rather than discovered edge cases. Live model results can vary across models and over time.
+The cases are synthetic and small. The judge checks the final action, not the full customer-facing response. The rubric is handcrafted, so it represents known policy constraints rather than discovered edge cases. Live model results can vary across models, prompts, and repeated runs.
 
 ## DSC Article Angle
 
