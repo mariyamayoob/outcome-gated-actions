@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Iterable
+from uuid import uuid4
 
 from outcome_gated_actions.agent import DecisionProvider, get_provider_from_env
 from outcome_gated_actions.judge import RubricJudge
@@ -20,13 +22,17 @@ def run_baseline(
     provider: DecisionProvider | None = None,
 ) -> list[dict]:
     decision_provider = provider or get_provider_from_env()
+    run_metadata = _run_metadata(decision_provider, "baseline")
     records: list[dict] = []
     for case in cases:
         final = decision_provider.decide(case)
         records.append(
             {
+                "metadata": run_metadata,
                 "case_id": case.id,
                 "category": case.category,
+                "case_text": case.case_text,
+                "policy_text": case.policy_text,
                 "expected_action": case.expected_action,
                 "final": final.to_dict(),
                 "calls": 1,
@@ -43,6 +49,7 @@ def run_gated(
 ) -> list[dict]:
     decision_provider = provider or get_provider_from_env()
     rubric_judge = judge or RubricJudge()
+    run_metadata = _run_metadata(decision_provider, "gated")
     records: list[dict] = []
 
     for case in cases:
@@ -63,8 +70,11 @@ def run_gated(
         final_wrong = final.decision != case.expected_action
         records.append(
             {
+                "metadata": run_metadata,
                 "case_id": case.id,
                 "category": case.category,
+                "case_text": case.case_text,
+                "policy_text": case.policy_text,
                 "expected_action": case.expected_action,
                 "initial": initial.to_dict(),
                 "initial_judge": initial_judge.to_dict(),
@@ -97,3 +107,13 @@ def run_gated_file(
     records = run_gated(load_cases(cases_path))
     write_jsonl(output_path, records)
     return records
+
+
+def _run_metadata(provider: DecisionProvider, run_type: str) -> dict:
+    metadata = provider.metadata()
+    return {
+        "run_id": str(uuid4()),
+        "run_type": run_type,
+        "created_at": datetime.now(UTC).isoformat(),
+        **metadata,
+    }

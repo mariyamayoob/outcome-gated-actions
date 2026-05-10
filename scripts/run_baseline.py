@@ -12,7 +12,10 @@ from outcome_gated_actions.runners import DEFAULT_BASELINE_PATH, run_baseline_fi
 
 
 def main() -> None:
-    records = run_baseline_file()
+    try:
+        records = run_baseline_file()
+    except ValueError as exc:
+        raise SystemExit(f"Configuration error: {exc}") from exc
     print(f"Wrote {len(records)} baseline records to {DEFAULT_BASELINE_PATH}")
 
 

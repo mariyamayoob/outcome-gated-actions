@@ -55,8 +55,8 @@ class SupportCase:
             raise ValueError("rubric must be an object")
 
         allowed_actions = rubric.get("allowed_actions")
-        if not isinstance(allowed_actions, list) or not allowed_actions:
-            raise ValueError("rubric.allowed_actions must be a non-empty list")
+        if not isinstance(allowed_actions, list) or len(allowed_actions) != 1:
+            raise ValueError("rubric.allowed_actions must contain exactly one action")
         for action in allowed_actions:
             if not isinstance(action, str):
                 raise ValueError("rubric.allowed_actions must contain strings")

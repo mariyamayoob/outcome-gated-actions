@@ -22,8 +22,11 @@ def make_report(
     summary_path: Path | str = DEFAULT_SUMMARY_PATH,
     failure_examples_path: Path | str = DEFAULT_FAILURE_EXAMPLES_PATH,
 ) -> dict[str, float]:
+    _require_output_file(baseline_path, "baseline")
+    _require_output_file(gated_path, "gated")
     baseline_records = read_jsonl(baseline_path)
     gated_records = read_jsonl(gated_path)
+    _validate_openai_outputs(baseline_records, gated_records)
     metrics = calculate_metrics(baseline_records, gated_records)
     write_summary_csv(metrics, summary_path)
     write_failure_examples(baseline_records, gated_records, failure_examples_path)
@@ -93,6 +96,8 @@ def _example_lines(record: dict[str, Any]) -> list[str]:
         f"### {record['case_id']}",
         "",
         f"- Category: {record['category']}",
+        f"- Case: {record.get('case_text', 'not recorded')}",
+        f"- Policy: {record.get('policy_text', 'not recorded')}",
         f"- Expected action: {record['expected_action']}",
         f"- Initial action: {initial.get('decision', 'n/a')}",
         f"- Final action: {final.get('decision', 'n/a')}",
@@ -106,3 +111,26 @@ def _format_value(value: float) -> str:
     if isinstance(value, float):
         return f"{value:.4f}"
     return str(value)
+
+
+def _require_output_file(path: Path | str, run_name: str) -> None:
+    if not Path(path).exists():
+        raise ValueError(
+            f"{run_name} output is missing. Run scripts/run_{run_name}.py before making a report."
+        )
+
+
+def _validate_openai_outputs(
+    baseline_records: list[dict[str, Any]],
+    gated_records: list[dict[str, Any]],
+) -> None:
+    for run_name, records in (("baseline", baseline_records), ("gated", gated_records)):
+        if not records:
+            raise ValueError(f"{run_name} output is empty")
+        for record in records:
+            metadata = record.get("metadata")
+            if not isinstance(metadata, dict) or metadata.get("provider") != "openai":
+                raise ValueError(
+                    f"{run_name} output is missing OpenAI run metadata. "
+                    "Rerun baseline and gated scripts with OPENAI_API_KEY and OUTCOME_GATED_MODEL."
+                )

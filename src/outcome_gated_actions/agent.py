@@ -2,14 +2,32 @@
 
 from __future__ import annotations
 
-import json
 import os
-from typing import Protocol
+from typing import Literal, Protocol
 
 from openai import OpenAI
+from pydantic import BaseModel, Field
 
 from outcome_gated_actions.prompts import build_decision_messages
 from outcome_gated_actions.schemas import AgentDecision, SupportCase
+
+PROMPT_VERSION = "support_decision_v1"
+TEMPERATURE = 0.0
+
+
+class OpenAIDecisionOutput(BaseModel):
+    decision: Literal[
+        "APPROVE",
+        "DENY",
+        "ASK_CLARIFYING_QUESTION",
+        "ESCALATE",
+        "NO_ACTION",
+    ]
+    reason: str = Field(description="Short reason for the selected action.")
+    next_action: str = Field(description="Short operational next step.")
+    risk_flags: list[str] = Field(
+        description="Short risk flags. Use an empty list when none apply."
+    )
 
 
 class DecisionProvider(Protocol):
@@ -19,6 +37,9 @@ class DecisionProvider(Protocol):
         failed_criteria: list[str] | None = None,
     ) -> AgentDecision:
         """Return one closed-set support action."""
+
+    def metadata(self) -> dict[str, str | float]:
+        """Return run metadata for outputs."""
 
 
 class OpenAIProvider:
@@ -42,15 +63,25 @@ class OpenAIProvider:
         case: SupportCase,
         failed_criteria: list[str] | None = None,
     ) -> AgentDecision:
-        response = self.client.chat.completions.create(
+        response = self.client.responses.parse(
             model=self.model,
-            messages=build_decision_messages(case, failed_criteria),
-            response_format={"type": "json_object"},
+            input=build_decision_messages(case, failed_criteria),
+            text_format=OpenAIDecisionOutput,
+            temperature=TEMPERATURE,
         )
-        content = response.choices[0].message.content
-        if not content:
-            raise ValueError("OpenAI response did not contain JSON content")
-        return AgentDecision.from_dict(json.loads(content))
+        parsed = response.output_parsed
+        if not parsed:
+            raise ValueError("OpenAI response did not contain a structured decision")
+        return AgentDecision.from_dict(parsed.model_dump())
+
+    def metadata(self) -> dict[str, str | float]:
+        return {
+            "provider": "openai",
+            "api": "responses",
+            "model": self.model,
+            "prompt_version": PROMPT_VERSION,
+            "temperature": TEMPERATURE,
+        }
 
 
 def get_provider_from_env() -> DecisionProvider:

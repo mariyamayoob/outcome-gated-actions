@@ -16,7 +16,10 @@ from outcome_gated_actions.report import (
 
 
 def main() -> None:
-    metrics = make_report()
+    try:
+        metrics = make_report()
+    except ValueError as exc:
+        raise SystemExit(f"Report error: {exc}") from exc
     print(f"Wrote summary to {DEFAULT_SUMMARY_PATH}")
     print(f"Wrote examples to {DEFAULT_FAILURE_EXAMPLES_PATH}")
     print(

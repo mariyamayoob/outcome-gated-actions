@@ -12,7 +12,10 @@ from outcome_gated_actions.runners import DEFAULT_GATED_PATH, run_gated_file
 
 
 def main() -> None:
-    records = run_gated_file()
+    try:
+        records = run_gated_file()
+    except ValueError as exc:
+        raise SystemExit(f"Configuration error: {exc}") from exc
     print(f"Wrote {len(records)} gated records to {DEFAULT_GATED_PATH}")
 
 
