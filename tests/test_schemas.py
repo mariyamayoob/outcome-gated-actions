@@ -43,7 +43,7 @@ def test_case_validation_requires_rubric_constraints() -> None:
         "expected_action": "NO_ACTION",
         "must_satisfy": [],
         "must_not_do": [],
-        "rubric": {"allowed_actions": ["NO_ACTION"]},
+        "rubric": {},
     }
 
     with pytest.raises(ValueError, match="rubric.constraints"):
