@@ -18,21 +18,14 @@ def calculate_metrics(baseline_records: list[dict[str, Any]], gated_records: lis
     fixed_after_retry = sum(bool(record.get("fixed_after_retry")) for record in gated_records)
     false_rejections = sum(bool(record.get("false_rejection")) for record in gated_records)
     total_calls = sum(int(record.get("calls", 0)) for record in gated_records)
-    initial_correct_count = sum(not bool(record.get("initial_wrong_action")) for record in gated_records)
 
     return {
-        "case_count": case_count,
         "baseline_wrong_actions": baseline_wrong_actions,
         "baseline_wrong_action_rate": baseline_wrong_actions / case_count,
         "gated_wrong_actions": gated_wrong_actions,
         "gated_wrong_action_rate": gated_wrong_actions / case_count,
         "fixed_after_retry": fixed_after_retry,
-        "fixed_after_retry_rate": fixed_after_retry / retry_count if retry_count else 0.0,
         "false_rejections": false_rejections,
-        "false_rejection_rate": false_rejections / initial_correct_count
-        if initial_correct_count
-        else 0.0,
-        "retry_count": retry_count,
         "retry_rate": retry_count / case_count,
         "average_calls_per_case": total_calls / case_count,
     }

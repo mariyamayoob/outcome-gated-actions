@@ -49,7 +49,6 @@ def test_calculates_article_table_metrics() -> None:
     assert metrics["gated_wrong_action_rate"] == pytest.approx(1 / 3)
     assert metrics["fixed_after_retry"] == 1
     assert metrics["false_rejections"] == 1
-    assert metrics["false_rejection_rate"] == pytest.approx(1 / 2)
     assert metrics["retry_rate"] == pytest.approx(2 / 3)
     assert metrics["average_calls_per_case"] == pytest.approx(5 / 3)
 
