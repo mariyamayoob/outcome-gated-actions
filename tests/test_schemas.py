@@ -27,10 +27,26 @@ def test_case_validation_rejects_unknown_action() -> None:
         "expected_action": "TRANSFER",
         "must_satisfy": [],
         "must_not_do": [],
-        "rubric": {"allowed_actions": ["TRANSFER"], "failures": {}},
+        "rubric": {"constraints": []},
     }
 
     with pytest.raises(ValueError, match="decision must be one of"):
+        SupportCase.from_dict(data)
+
+
+def test_case_validation_requires_rubric_constraints() -> None:
+    data = {
+        "id": "bad_case",
+        "category": "Synthetic",
+        "case_text": "A requester asks for support.",
+        "policy_text": "Use explicit constraints.",
+        "expected_action": "NO_ACTION",
+        "must_satisfy": [],
+        "must_not_do": [],
+        "rubric": {"allowed_actions": ["NO_ACTION"]},
+    }
+
+    with pytest.raises(ValueError, match="rubric.constraints"):
         SupportCase.from_dict(data)
 
 

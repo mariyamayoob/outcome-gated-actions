@@ -24,8 +24,6 @@ def build_decision_messages(
         "case_id": case.id,
         "case_text": case.case_text,
         "policy_text": case.policy_text,
-        "must_satisfy": list(case.must_satisfy),
-        "must_not_do": list(case.must_not_do),
         "closed_action_set": list(ALLOWED_ACTIONS),
         "response_schema": {
             "decision": "APPROVE | DENY | ASK_CLARIFYING_QUESTION | ESCALATE | NO_ACTION",

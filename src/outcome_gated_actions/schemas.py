@@ -54,21 +54,16 @@ class SupportCase:
         if not isinstance(rubric, dict):
             raise ValueError("rubric must be an object")
 
-        allowed_actions = rubric.get("allowed_actions")
-        if not isinstance(allowed_actions, list) or len(allowed_actions) != 1:
-            raise ValueError("rubric.allowed_actions must contain exactly one action")
-        for action in allowed_actions:
-            if not isinstance(action, str):
-                raise ValueError("rubric.allowed_actions must contain strings")
-            validate_action(action)
-
-        failures = rubric.get("failures", {})
-        if not isinstance(failures, dict):
-            raise ValueError("rubric.failures must be an object when present")
+        constraints = rubric.get("constraints")
+        if not isinstance(constraints, list):
+            raise ValueError("rubric.constraints must be a list")
+        for constraint in constraints:
+            if not isinstance(constraint, dict):
+                raise ValueError("each rubric constraint must be an object")
+            validate_action(_require_non_empty_string(constraint, "action"))
+            _require_string_list(constraint, "criteria")
 
         expected_action = validate_action(_require_non_empty_string(data, "expected_action"))
-        if expected_action not in allowed_actions:
-            raise ValueError("expected_action must be allowed by the case rubric")
 
         return cls(
             id=_require_non_empty_string(data, "id"),
@@ -82,8 +77,8 @@ class SupportCase:
         )
 
     @property
-    def allowed_actions(self) -> tuple[str, ...]:
-        return tuple(self.rubric["allowed_actions"])
+    def constraints(self) -> tuple[dict[str, Any], ...]:
+        return tuple(self.rubric["constraints"])
 
     def to_dict(self) -> dict[str, Any]:
         return {
