@@ -1,4 +1,4 @@
-"""OpenAI support decision agent."""
+"""OpenAI support decision provider."""
 
 from __future__ import annotations
 
@@ -53,9 +53,9 @@ class OpenAIProvider:
     def from_env(cls) -> "OpenAIProvider":
         if not os.environ.get("OPENAI_API_KEY"):
             raise ValueError("OPENAI_API_KEY is required to run the OpenAI support agent")
-        model = os.environ.get("OUTCOME_GATED_MODEL") or os.environ.get("OPENAI_MODEL")
+        model = os.environ.get("OUTCOME_GATED_MODEL")
         if not model:
-            raise ValueError("OUTCOME_GATED_MODEL or OPENAI_MODEL is required")
+            raise ValueError("OUTCOME_GATED_MODEL is required for OpenAI mode")
         return cls(model=model)
 
     def decide(
@@ -85,4 +85,7 @@ class OpenAIProvider:
 
 
 def get_provider_from_env() -> DecisionProvider:
-    return OpenAIProvider.from_env()
+    provider = os.environ.get("OUTCOME_GATED_PROVIDER", "openai").strip().lower()
+    if provider == "openai":
+        return OpenAIProvider.from_env()
+    raise ValueError("OUTCOME_GATED_PROVIDER must be openai")

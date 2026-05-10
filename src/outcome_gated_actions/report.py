@@ -26,19 +26,26 @@ def make_report(
     _require_output_file(gated_path, "gated")
     baseline_records = read_jsonl(baseline_path)
     gated_records = read_jsonl(gated_path)
-    _validate_openai_outputs(baseline_records, gated_records)
+    metadata = _run_metadata(baseline_records, gated_records)
     metrics = calculate_metrics(baseline_records, gated_records)
-    write_summary_csv(metrics, summary_path)
-    write_failure_examples(baseline_records, gated_records, failure_examples_path)
+    write_summary_csv(metrics, summary_path, metadata)
+    write_failure_examples(baseline_records, gated_records, failure_examples_path, metadata)
     return metrics
 
 
-def write_summary_csv(metrics: dict[str, float], path: Path | str) -> None:
+def write_summary_csv(
+    metrics: dict[str, float],
+    path: Path | str,
+    metadata: dict[str, Any] | None = None,
+) -> None:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["metric", "value"])
+        if metadata:
+            for key, value in metadata.items():
+                writer.writerow([f"metadata_{key}", value])
         for metric, value in metrics.items():
             writer.writerow([metric, _format_value(value)])
 
@@ -47,6 +54,7 @@ def write_failure_examples(
     baseline_records: list[dict[str, Any]],
     gated_records: list[dict[str, Any]],
     path: Path | str,
+    metadata: dict[str, Any] | None = None,
 ) -> None:
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -59,9 +67,20 @@ def write_failure_examples(
         "",
         "These examples are synthetic and are intended for article discussion.",
         "",
-        "## Remaining Wrong Final Actions",
-        "",
     ]
+    if metadata:
+        lines.extend(
+            [
+                "## Run Metadata",
+                "",
+                f"- Baseline provider: {metadata.get('baseline_provider', 'unknown')}",
+                f"- Gated provider: {metadata.get('gated_provider', 'unknown')}",
+                f"- Baseline model: {metadata.get('baseline_model', 'unknown')}",
+                f"- Gated model: {metadata.get('gated_model', 'unknown')}",
+                "",
+            ]
+        )
+    lines.extend(["## Remaining Wrong Final Actions", ""])
     if remaining_wrong:
         for record in remaining_wrong:
             lines.extend(_example_lines(record))
@@ -120,17 +139,21 @@ def _require_output_file(path: Path | str, run_name: str) -> None:
         )
 
 
-def _validate_openai_outputs(
+def _run_metadata(
     baseline_records: list[dict[str, Any]],
     gated_records: list[dict[str, Any]],
-) -> None:
+) -> dict[str, Any]:
+    metadata: dict[str, Any] = {}
     for run_name, records in (("baseline", baseline_records), ("gated", gated_records)):
         if not records:
             raise ValueError(f"{run_name} output is empty")
-        for record in records:
-            metadata = record.get("metadata")
-            if not isinstance(metadata, dict) or metadata.get("provider") != "openai":
-                raise ValueError(
-                    f"{run_name} output is missing OpenAI run metadata. "
-                    "Rerun baseline and gated scripts with OPENAI_API_KEY and OUTCOME_GATED_MODEL."
-                )
+        run_metadata = records[0].get("metadata")
+        if not isinstance(run_metadata, dict) or "provider" not in run_metadata:
+            raise ValueError(f"{run_name} output is missing provider metadata")
+        if run_metadata["provider"] != "openai":
+            raise ValueError(f"{run_name} output must come from the OpenAI provider")
+        metadata[f"{run_name}_provider"] = run_metadata.get("provider", "unknown")
+        metadata[f"{run_name}_model"] = run_metadata.get("model", "unknown")
+        metadata[f"{run_name}_run_id"] = run_metadata.get("run_id", "unknown")
+        metadata[f"{run_name}_created_at"] = run_metadata.get("created_at", "unknown")
+    return metadata
