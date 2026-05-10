@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from outcome_gated_actions.prompts import build_judge_payload
 from outcome_gated_actions.schemas import AgentDecision, JudgeResult, SupportCase
 
 
@@ -9,7 +10,11 @@ class RubricJudge:
     """Judge only the objective final action, not prose quality."""
 
     def judge(self, case: SupportCase, decision: AgentDecision) -> JudgeResult:
-        failed_criteria = tuple(self._failed_criteria(case, decision.decision))
+        judge_payload = build_judge_payload(case, decision)
+        selected_action = judge_payload["agent_decision"]["decision"]
+        failed_criteria = tuple(
+            self._failed_criteria(judge_payload["rubric_constraints"], selected_action)
+        )
         if failed_criteria:
             return JudgeResult(
                 passed=False,
@@ -27,9 +32,9 @@ class RubricJudge:
             ),
         )
 
-    def _failed_criteria(self, case: SupportCase, decision: str) -> list[str]:
+    def _failed_criteria(self, constraints: list[dict], decision: str) -> list[str]:
         failed: list[str] = []
-        for constraint in case.constraints:
+        for constraint in constraints:
             if constraint["action"] == decision:
                 failed.extend(constraint["criteria"])
         return failed

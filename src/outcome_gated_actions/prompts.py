@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from outcome_gated_actions.schemas import ALLOWED_ACTIONS, SupportCase
+from outcome_gated_actions.schemas import ALLOWED_ACTIONS, AgentDecision, SupportCase
 
 
 def build_decision_messages(
@@ -46,3 +46,12 @@ def build_decision_messages(
             "content": json.dumps(user_payload, indent=2) + retry_note,
         },
     ]
+
+
+def build_judge_payload(case: SupportCase, decision: AgentDecision) -> dict[str, Any]:
+    return {
+        "agent_decision": decision.to_dict(),
+        "case_text": case.case_text,
+        "policy_text": case.policy_text,
+        "rubric_constraints": list(case.constraints),
+    }
