@@ -5,8 +5,8 @@ metadata_baseline_run_id,d9d11620-daeb-4ea1-8818-50d1fc4cc9f3
 metadata_baseline_created_at,2026-05-10T19:30:34.804081+00:00
 metadata_gated_provider,openai
 metadata_gated_model,gpt-4.1-mini
-metadata_gated_run_id,436a23e5-5c44-4b8f-8643-2e2b44d04b11
-metadata_gated_created_at,2026-05-10T19:37:57.222762+00:00
+metadata_gated_run_id,f6bc4b6a-08a4-494c-998d-5822d02ce21a
+metadata_gated_created_at,2026-05-10T19:43:23.038984+00:00
 baseline_wrong_actions,6
 baseline_wrong_action_rate,0.2000
 gated_wrong_actions,2
