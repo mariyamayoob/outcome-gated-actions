@@ -6,8 +6,8 @@ These examples are synthetic and are intended for article discussion.
 
 - Baseline provider: openai
 - Gated provider: openai
-- Baseline model: gpt-4.1-mini
-- Gated model: gpt-4.1-mini
+- Baseline model: gpt-5.4-mini
+- Gated model: gpt-5.4-mini
 
 ## Remaining Wrong Final Actions
 

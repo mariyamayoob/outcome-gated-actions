@@ -119,7 +119,7 @@ Rubric-gated retries can help when the agent outcome is a closed, objective deci
 
 ## Example run
 
-Model: gpt-4.1-mini
+Model: gpt-5.4-mini
 Cases: 30
 Baseline wrong actions: 6 / 30
 Gated wrong actions: 2 / 30
